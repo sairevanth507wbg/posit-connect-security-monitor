@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "locale": "English_United States.1252",
+  "metadata": {
+    "appmode": "jupyter-static",
+    "entrypoint": "scan.ipynb"
+  },
+  "python": {
+    "version": "3.13.7",
+    "package_manager": {
+      "name": "pip",
+      "version": "26.2.1",
+      "package_file": "requirements.txt"
+    }
+  },
+  "environment": {
+    "python": {
+      "requires": "~=3.11.0"
+    }
+  },
+  "files": {
+    "scan.ipynb": {
+      "checksum": "388653075e87ac2aeaffa42f1566097f"
+    },
+    "requirements.txt": {
+      "checksum": "5c525cc7a44122ad7144c25a0dcdd9ef"
+    },
+    "exceptions.py": {
+      "checksum": "df20bb348d3301234ad0963d59065706"
+    },
+    "config/__init__.py": {
+      "checksum": "aadc3daf3cdcbbf525babb4ddac0fb1b"
+    },
+    "config/settings.py": {
+      "checksum": "343880bb0a1cae3e95220cf2de47f110"
+    },
+    "config/logging_config.py": {
+      "checksum": "fe332008c555fb6ea8e5415dd29cdd94"
+    },
+    "clients/__init__.py": {
+      "checksum": "95546f4d813edaf5cfb710940ffa51f2"
+    },
+    "clients/connect_client.py": {
+      "checksum": "0c7954c138f9583f2542a9dd6eae665d"
+    },
+    "database/__init__.py": {
+      "checksum": "875dd038fd465d8d0100c91f543d6b94"
+    },
+    "database/connection.py": {
+      "checksum": "e247a196fd113b2a3ad2942b08b2c929"
+    },
+    "database/models.py": {
+      "checksum": "101c66c60de6c74cf0bed7dce0ad4509"
+    },
+    "repositories/__init__.py": {
+      "checksum": "b8b1ebadf87b4c3952f3177d548e0b9e"
+    },
+    "repositories/application_repository.py": {
+      "checksum": "8558d8fa540fa5bad1fecb1990128000"
+    },
+    "repositories/package_repository.py": {
+      "checksum": "055d92d2b88b0ec8170be24fac0d1598"
+    },
+    "schemas/__init__.py": {
+      "checksum": "56862642e207caab0c1592ce6883c5f0"
+    },
+    "schemas/application.py": {
+      "checksum": "3f0f0c8a9caf67f8138934a8267beeb8"
+    },
+    "schemas/package.py": {
+      "checksum": "f28ea33297330b9edf7c0f5dd237e977"
+    },
+    "services/__init__.py": {
+      "checksum": "48ae7d45df32a46895cecf5e16d0acff"
+    },
+    "services/inventory_service.py": {
+      "checksum": "845d55d042341505f859bf4927ec7009"
+    }
+  }
+}
