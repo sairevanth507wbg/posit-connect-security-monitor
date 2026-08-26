@@ -65,6 +65,14 @@ class Database:
                 "Missing table(s): " + ", ".join(missing) + ". Run: alembic upgrade head"
             )
 
+    def ensure_schema(self) -> str:
+        """Run any outstanding migrations. Safe to call on every run."""
+        from database.migrations import ensure_schema
+
+        return ensure_schema(
+            self.engine, self._settings.database_url_string(hide_password=False)
+        )
+
     def create_all(self) -> None:
         try:
             Base.metadata.create_all(self.engine)

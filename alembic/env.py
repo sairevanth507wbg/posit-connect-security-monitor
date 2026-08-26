@@ -24,18 +24,24 @@ from database.models import Base  # noqa: E402
 
 config = context.config
 
-if config.config_file_name is not None:
+# Only configure logging from alembic.ini when run via the CLI. When called
+# programmatically the application has already set up logging, and fileConfig
+# would tear those handlers down.
+if config.config_file_name is not None and not config.attributes.get("programmatic"):
     fileConfig(config.config_file_name)
 
 # Autogenerate compares the live database against this metadata.
 target_metadata = Base.metadata
 
-_settings = get_settings()
-config.set_main_option(
-    "sqlalchemy.url",
-    # Escape % so ConfigParser interpolation does not choke on encoded passwords.
-    _settings.database_url_string(hide_password=False).replace("%", "%%"),
-)
+# A programmatic caller (database.migrations) sets the URL itself. Only fall
+# back to .env when running the alembic CLI, so the caller's URL is not
+# silently overwritten - and so this file does not require a .env to import.
+if not config.get_main_option("sqlalchemy.url", None):
+    config.set_main_option(
+        "sqlalchemy.url",
+        # Escape % so ConfigParser interpolation does not choke on passwords.
+        get_settings().database_url_string(hide_password=False).replace("%", "%%"),
+    )
 
 
 def run_migrations_offline() -> None:

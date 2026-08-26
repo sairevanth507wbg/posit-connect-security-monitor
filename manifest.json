@@ -20,7 +20,7 @@
   },
   "files": {
     "scan.ipynb": {
-      "checksum": "31ba12400a5ead3d5dc06982bc2a4f19"
+      "checksum": "8b60c02350d255e360d801ece21ed58e"
     },
     "requirements.txt": {
       "checksum": "5c525cc7a44122ad7144c25a0dcdd9ef"
@@ -47,10 +47,13 @@
       "checksum": "875dd038fd465d8d0100c91f543d6b94"
     },
     "database/connection.py": {
-      "checksum": "e247a196fd113b2a3ad2942b08b2c929"
+      "checksum": "1dabf22b1fcae6e923b04cf50a4259b4"
     },
     "database/models.py": {
       "checksum": "e7f8f04b3196ccdb2cbbd03877c9cc3a"
+    },
+    "database/migrations.py": {
+      "checksum": "26d346efd2b23a8dc97d4abfe935d82e"
     },
     "repositories/__init__.py": {
       "checksum": "b8b1ebadf87b4c3952f3177d548e0b9e"
@@ -78,6 +81,21 @@
     },
     "services/export_service.py": {
       "checksum": "cd42e6170c766fc701f34c36db8f076e"
+    },
+    "alembic.ini": {
+      "checksum": "9707bb51ff994cb82af976b1dcfe1b50"
+    },
+    "alembic/env.py": {
+      "checksum": "83b9df768a006b5e327604a679a11d52"
+    },
+    "alembic/script.py.mako": {
+      "checksum": "709cb25e1a76ccd5d0a7886bf965700d"
+    },
+    "alembic/versions/0001_initial_inventory_schema.py": {
+      "checksum": "28b98aebc3a1d13d3463cf19278dae8f"
+    },
+    "alembic/versions/0002_add_owner_email.py": {
+      "checksum": "5b6f475e70ea850dcfb42fffac261920"
     }
   }
 }
