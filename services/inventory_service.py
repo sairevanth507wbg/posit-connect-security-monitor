@@ -178,10 +178,12 @@ class InventoryService:
         return applications
 
     def _resolve_owners(self, applications: Sequence[ApplicationSchema]) -> None:
+        # ?include=owner returns username and name but never email, so an
+        # application still needs a user lookup whenever the email is missing.
         unresolved = {
             app.owner_guid
             for app in applications
-            if app.owner_guid and not (app.owner_first_name or app.owner_username)
+            if app.owner_guid and not app.owner_email
         }
         if len(unresolved) > BULK_USER_THRESHOLD:
             users = self._client.list_users()
@@ -189,11 +191,11 @@ class InventoryService:
                 self._client.prime_user_cache(users)
 
         for app in applications:
-            if app.owner_first_name or app.owner_username:
+            if app.owner_email:
                 app.owner = app.resolved_owner()
                 continue
             if not app.owner_guid:
-                app.owner = None
+                app.owner = app.resolved_owner()
                 continue
             try:
                 record = self._client.get_user(app.owner_guid)
@@ -202,12 +204,14 @@ class InventoryService:
             if record:
                 try:
                     user = UserSchema.model_validate(record)
-                    app.owner = user.display_name()
+                    app.owner = user.display_name() or app.resolved_owner()
                     app.owner_email = app.owner_email or user.email
                     continue
                 except ValidationError:
                     pass
-            app.owner = app.owner_guid
+            # Non-admin key or deleted user: keep the name ?include=owner gave
+            # us rather than overwriting it with a raw GUID.
+            app.owner = app.resolved_owner() or app.owner_guid
 
     def _fetch_chunk(
         self,
