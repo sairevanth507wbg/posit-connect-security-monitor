@@ -12,7 +12,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from config.settings import Settings, get_settings
-from database.models import Base
+from database.models import Application, Base, Package
 from exceptions import DatabaseConnectionError, DatabaseError, MigrationError
 
 logger = logging.getLogger(__name__)
@@ -58,11 +58,37 @@ class Database:
         return str(version)
 
     def verify_schema(self) -> None:
-        existing = set(inspect(self.engine).get_table_names())
-        missing = [t for t in REQUIRED_TABLES if t not in existing]
-        if missing:
+        """Check tables *and* columns.
+
+        Checking only tables let a stale schema through: the tables existed but
+        a later migration's column did not, so the failure surfaced much later
+        as an opaque UndefinedColumn deep inside an unrelated query.
+        """
+        inspector = inspect(self.engine)
+        existing = set(inspector.get_table_names())
+
+        missing_tables = [t for t in REQUIRED_TABLES if t not in existing]
+        if missing_tables:
             raise MigrationError(
-                "Missing table(s): " + ", ".join(missing) + ". Run: alembic upgrade head"
+                "Missing table(s): " + ", ".join(missing_tables)
+                + ". The schema has not been created. Run: alembic upgrade head"
+            )
+
+        problems = []
+        for table, model in (("applications", Application), ("packages", Package)):
+            expected = {c.name for c in model.__table__.columns}
+            actual = {c["name"] for c in inspector.get_columns(table)}
+            absent = sorted(expected - actual)
+            if absent:
+                problems.append(table + ": " + ", ".join(absent))
+
+        if problems:
+            raise MigrationError(
+                "Schema is out of date - missing column(s): "
+                + "; ".join(problems)
+                + ". Migrations did not apply. Confirm Connect is running the "
+                "latest bundle, then re-run. From a host with database access: "
+                "alembic upgrade head"
             )
 
     def ensure_schema(self) -> str:

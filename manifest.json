@@ -20,7 +20,7 @@
   },
   "files": {
     "scan.ipynb": {
-      "checksum": "8b60c02350d255e360d801ece21ed58e"
+      "checksum": "d37a73ffe9d33cbcdc705225bb017d8f"
     },
     "requirements.txt": {
       "checksum": "5c525cc7a44122ad7144c25a0dcdd9ef"
@@ -47,7 +47,7 @@
       "checksum": "875dd038fd465d8d0100c91f543d6b94"
     },
     "database/connection.py": {
-      "checksum": "1dabf22b1fcae6e923b04cf50a4259b4"
+      "checksum": "2d6cda84286b0a98c610fda57ed6ca95"
     },
     "database/models.py": {
       "checksum": "e7f8f04b3196ccdb2cbbd03877c9cc3a"
