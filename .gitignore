@@ -1,0 +1,39 @@
+# ---- Secrets: never commit these ----------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+*.key
+id_rsa
+id_ed25519
+credentials.json
+servers.json
+
+# ---- Posit deployment records (contain internal hostnames + GUIDs) ------
+.rsconnect/
+rsconnect-python/
+.posit/publish/deployments/
+
+# ---- Python -------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ---- Logs / local data --------------------------------------------------
+logs/*.log
+logs/*.log.*
+*.db
+*.sqlite3
+
+# ---- Editors / OS -------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

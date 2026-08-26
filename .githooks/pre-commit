@@ -1,0 +1,16 @@
+#!/bin/sh
+# Blocks a commit when staged content looks like a credential.
+# Enabled with:  git config core.hooksPath .githooks
+#
+# Bypass (NOT recommended):  git commit --no-verify
+
+if command -v python >/dev/null 2>&1; then
+    PY=python
+elif command -v python3 >/dev/null 2>&1; then
+    PY=python3
+else
+    echo "pre-commit: python not found; skipping secret scan" >&2
+    exit 0
+fi
+
+exec "$PY" scripts/check_secrets.py
