@@ -69,6 +69,7 @@ class ApplicationRepository:
             set_={
                 "app_name": stmt.excluded.app_name,
                 "owner": stmt.excluded.owner,
+                "owner_email": stmt.excluded.owner_email,
                 "content_url": stmt.excluded.content_url,
                 "bundle_id": stmt.excluded.bundle_id,
                 "created_at": stmt.excluded.created_at,
@@ -108,6 +109,7 @@ class ApplicationRepository:
             "content_guid": app.content_guid,
             "app_name": app.app_name,
             "owner": app.resolved_owner(),
+            "owner_email": app.owner_email,
             "content_url": app.content_url,
             "bundle_id": app.bundle_id,
             "created_at": app.created_at,

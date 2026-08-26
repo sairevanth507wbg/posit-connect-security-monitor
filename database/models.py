@@ -29,6 +29,7 @@ class Application(Base):
     __tablename__ = "applications"
     __table_args__ = (
         Index("ix_applications_owner", "owner"),
+        Index("ix_applications_owner_email", "owner_email"),
         Index("ix_applications_updated_at", "updated_at"),
     )
 
@@ -38,6 +39,7 @@ class Application(Base):
     )
     app_name: Mapped[str] = mapped_column(String(512), nullable=False)
     owner: Mapped[Optional[str]] = mapped_column(String(256))
+    owner_email: Mapped[Optional[str]] = mapped_column(String(320))
     content_url: Mapped[Optional[str]] = mapped_column(String(1024))
     bundle_id: Mapped[Optional[str]] = mapped_column(String(64))
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

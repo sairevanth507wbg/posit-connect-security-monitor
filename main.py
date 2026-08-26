@@ -4,6 +4,7 @@
     python main.py --check          verify Connect + PostgreSQL, then exit
     python main.py --limit 5 -v     smoke test five applications
     python main.py --db-stats       show what is stored, no network calls
+    python main.py --export-csv inventory.csv   write the inventory as CSV
 
 Exit codes: 0 ok, 1 completed with failures, 2 fatal.
 """
@@ -30,6 +31,7 @@ from exceptions import (
 )
 from repositories.application_repository import ApplicationRepository
 from repositories.package_repository import PackageRepository
+from services.export_service import ExportService
 from services.inventory_service import InventoryService, ScanResult
 
 logger = logging.getLogger("connect_inventory")
@@ -183,6 +185,11 @@ def build_parser() -> argparse.ArgumentParser:
                         help="concurrent package-fetch threads (default 8)")
     parser.add_argument("--check", action="store_true",
                         help="verify config, Connect, and PostgreSQL, then exit")
+    parser.add_argument("--export-csv", dest="export_csv", default=None, metavar="PATH",
+                        help="write the inventory to a CSV file and exit")
+    parser.add_argument("--export-applications", action="store_true",
+                        dest="export_applications",
+                        help="with --export-csv, one row per application instead of per package")
     parser.add_argument("--db-stats", action="store_true", dest="db_stats",
                         help="show what is stored and exit")
     parser.add_argument("--create-tables", action="store_true", dest="create_tables",
@@ -240,6 +247,14 @@ def run(argv: Optional[Sequence[str]] = None) -> int:
         if args.create_tables:
             database.create_all()
             print("Schema created.", file=sys.stderr)
+
+        if args.export_csv:
+            database.verify_schema()
+            rows = ExportService(database).to_file(
+                Path(args.export_csv), applications_only=args.export_applications
+            )
+            print("Wrote " + str(rows) + " row(s) to " + args.export_csv, file=sys.stderr)
+            return EXIT_SUCCESS
 
         if args.db_stats:
             database.verify_schema()

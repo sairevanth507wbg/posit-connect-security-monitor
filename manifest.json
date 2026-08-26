@@ -20,7 +20,7 @@
   },
   "files": {
     "scan.ipynb": {
-      "checksum": "641f333ee5a8c1d689f727e26a698bf7"
+      "checksum": "31ba12400a5ead3d5dc06982bc2a4f19"
     },
     "requirements.txt": {
       "checksum": "5c525cc7a44122ad7144c25a0dcdd9ef"
@@ -50,13 +50,13 @@
       "checksum": "e247a196fd113b2a3ad2942b08b2c929"
     },
     "database/models.py": {
-      "checksum": "101c66c60de6c74cf0bed7dce0ad4509"
+      "checksum": "e7f8f04b3196ccdb2cbbd03877c9cc3a"
     },
     "repositories/__init__.py": {
       "checksum": "b8b1ebadf87b4c3952f3177d548e0b9e"
     },
     "repositories/application_repository.py": {
-      "checksum": "8558d8fa540fa5bad1fecb1990128000"
+      "checksum": "5d322b8d033d36d941a00596d8760fb1"
     },
     "repositories/package_repository.py": {
       "checksum": "055d92d2b88b0ec8170be24fac0d1598"
@@ -75,6 +75,9 @@
     },
     "services/inventory_service.py": {
       "checksum": "845d55d042341505f859bf4927ec7009"
+    },
+    "services/export_service.py": {
+      "checksum": "cd42e6170c766fc701f34c36db8f076e"
     }
   }
 }
