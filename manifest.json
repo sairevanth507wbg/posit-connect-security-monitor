@@ -20,7 +20,7 @@
   },
   "files": {
     "scan.ipynb": {
-      "checksum": "d37a73ffe9d33cbcdc705225bb017d8f"
+      "checksum": "0d8d10a65af980f079cbb32bc7abc70c"
     },
     "requirements.txt": {
       "checksum": "5c525cc7a44122ad7144c25a0dcdd9ef"
@@ -77,10 +77,10 @@
       "checksum": "48ae7d45df32a46895cecf5e16d0acff"
     },
     "services/inventory_service.py": {
-      "checksum": "845d55d042341505f859bf4927ec7009"
+      "checksum": "42724f7b6ab898e91e5d2a323dbdc369"
     },
     "services/export_service.py": {
-      "checksum": "cd42e6170c766fc701f34c36db8f076e"
+      "checksum": "7377dcddc18ec114ba10ecbc221bab39"
     },
     "alembic.ini": {
       "checksum": "9707bb51ff994cb82af976b1dcfe1b50"

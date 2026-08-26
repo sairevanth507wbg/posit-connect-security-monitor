@@ -26,6 +26,10 @@ venv/
 .ruff_cache/
 *.egg-info/
 
+# ---- Inventory exports: staff names, emails, internal app URLs ----------
+*.csv
+*.zip
+
 # ---- Logs / local data --------------------------------------------------
 logs/*.log
 logs/*.log.*

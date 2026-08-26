@@ -1,10 +1,11 @@
-"""CSV export of the inventory, for handoff to the OIS scanning tool."""
+"""CSV and zipped-CSV export of the inventory, for handoff to the OIS scanning tool."""
 
 from __future__ import annotations
 
 import csv
 import io
 import logging
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator, List, Optional, Sequence, Tuple
@@ -146,6 +147,52 @@ class ExportService:
         return count
 
     @staticmethod
-    def suggested_filename(prefix: str = "connect-inventory") -> str:
+    def suggested_filename(
+        prefix: str = "connect-inventory", extension: str = "csv"
+    ) -> str:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
-        return prefix + "-" + stamp + ".csv"
+        return prefix + "-" + stamp + "." + extension.lstrip(".")
+
+    @staticmethod
+    def _zip_bytes(csv_text: str, arcname: str) -> bytes:
+        """Wrap rendered CSV text in a single-entry deflated archive."""
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            # utf-8-sig to match to_file(), so the extracted CSV opens cleanly
+            # in Excel rather than as mojibake.
+            archive.writestr(arcname, csv_text.encode("utf-8-sig"))
+        return buffer.getvalue()
+
+    def to_zip_bytes(
+        self,
+        *,
+        applications_only: bool = False,
+        arcname: Optional[str] = None,
+    ) -> bytes:
+        """Render the CSV and return it zipped, in memory."""
+        csv_text = self.to_string(applications_only=applications_only)
+        return self._zip_bytes(csv_text, arcname or self.suggested_filename())
+
+    def to_zip_file(
+        self,
+        path: Path,
+        *,
+        applications_only: bool = False,
+        arcname: Optional[str] = None,
+    ) -> int:
+        """Write the CSV to disk inside a zip. Returns the number of data rows."""
+        path = Path(path)
+        if path.parent and not path.parent.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+        csv_text = self.to_string(applications_only=applications_only)
+        data = self._zip_bytes(csv_text, arcname or self.suggested_filename())
+        path.write_bytes(data)
+
+        # to_string() terminates every row, header included, with CRLF.
+        count = max(csv_text.count("\r\n") - 1, 0)
+        logger.info(
+            "Wrote inventory zip",
+            extra={"path": str(path), "rows": count, "bytes": len(data)},
+        )
+        return count
