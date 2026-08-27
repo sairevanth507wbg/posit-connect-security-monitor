@@ -98,7 +98,7 @@
       "checksum": "5b6f475e70ea850dcfb42fffac261920"
     },
     "clients/wiz_client.py": {
-      "checksum": "47c02b9e42fbabcfe39a0e6f41d6967e"
+      "checksum": "8c753b6070b5a1319811f92a3a7d0c3f"
     },
     "alembic/versions/0003_add_findings_and_notifications.py": {
       "checksum": "0417ca0993bf2a087d04706415b75617"
