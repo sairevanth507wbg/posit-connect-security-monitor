@@ -20,19 +20,19 @@
   },
   "files": {
     "scan.ipynb": {
-      "checksum": "0d8d10a65af980f079cbb32bc7abc70c"
+      "checksum": "8005acbe98c58e7f73e0e8bece8b2473"
     },
     "requirements.txt": {
       "checksum": "5c525cc7a44122ad7144c25a0dcdd9ef"
     },
     "exceptions.py": {
-      "checksum": "df20bb348d3301234ad0963d59065706"
+      "checksum": "df1080ced9aff7ba0e3fa563de6bc90a"
     },
     "config/__init__.py": {
       "checksum": "aadc3daf3cdcbbf525babb4ddac0fb1b"
     },
     "config/settings.py": {
-      "checksum": "343880bb0a1cae3e95220cf2de47f110"
+      "checksum": "24ce7cd9b5c733046b2584f1dd0e3493"
     },
     "config/logging_config.py": {
       "checksum": "fe332008c555fb6ea8e5415dd29cdd94"
@@ -50,7 +50,7 @@
       "checksum": "2d6cda84286b0a98c610fda57ed6ca95"
     },
     "database/models.py": {
-      "checksum": "e7f8f04b3196ccdb2cbbd03877c9cc3a"
+      "checksum": "f239f98f33ee8cb71a9d53a2bfb66b57"
     },
     "database/migrations.py": {
       "checksum": "26d346efd2b23a8dc97d4abfe935d82e"
@@ -80,7 +80,7 @@
       "checksum": "42724f7b6ab898e91e5d2a323dbdc369"
     },
     "services/export_service.py": {
-      "checksum": "7377dcddc18ec114ba10ecbc221bab39"
+      "checksum": "516513aa51499f614e944ee3c2ec0f09"
     },
     "alembic.ini": {
       "checksum": "9707bb51ff994cb82af976b1dcfe1b50"
@@ -96,6 +96,12 @@
     },
     "alembic/versions/0002_add_owner_email.py": {
       "checksum": "5b6f475e70ea850dcfb42fffac261920"
+    },
+    "clients/wiz_client.py": {
+      "checksum": "47c02b9e42fbabcfe39a0e6f41d6967e"
+    },
+    "alembic/versions/0003_add_findings_and_notifications.py": {
+      "checksum": "0417ca0993bf2a087d04706415b75617"
     }
   }
 }

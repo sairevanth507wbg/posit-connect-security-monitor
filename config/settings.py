@@ -55,6 +55,14 @@ class Settings(BaseSettings):
     page_size: int = Field(default=500, ge=1, le=500)
     verify_ssl: bool = True
 
+    # Wiz. Optional: absent credentials disable the scan rather than failing
+    # the run, so the inventory still works before OIS issues them.
+    wiz_api_url: Optional[str] = None
+    wiz_auth_url: str = "https://auth.app.wiz.io/oauth/token"
+    wiz_audience: str = "wiz-api"
+    wiz_client_id: Optional[str] = None
+    wiz_client_secret: Optional[SecretStr] = None
+
     max_workers: int = Field(default=8, ge=1, le=32)
     batch_size: int = Field(default=50, ge=1, le=1000)
 
@@ -143,6 +151,16 @@ class Settings(BaseSettings):
     def api_key_value(self) -> str:
         return self.connect_api_key.get_secret_value()
 
+    @property
+    def wiz_configured(self) -> bool:
+        """True only when every value the Wiz client needs is present."""
+        return bool(self.wiz_api_url and self.wiz_client_id and self.wiz_client_secret)
+
+    def wiz_client_secret_value(self) -> str:
+        if self.wiz_client_secret is None:
+            return ""
+        return self.wiz_client_secret.get_secret_value()
+
     def safe_summary(self) -> Dict[str, Any]:
         return {
             "connect_server_url": self.connect_server_url,
@@ -154,6 +172,9 @@ class Settings(BaseSettings):
             "max_workers": self.max_workers,
             "batch_size": self.batch_size,
             "log_level": self.log_level,
+            "wiz_api_url": self.wiz_api_url or "(not configured)",
+            "wiz_client_id": "***redacted***" if self.wiz_client_id else "(not set)",
+            "wiz_client_secret": "***redacted***" if self.wiz_client_secret else "(not set)",
         }
 
 

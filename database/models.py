@@ -59,6 +59,96 @@ class Application(Base):
         return "<Application " + self.content_guid + " " + self.app_name + ">"
 
 
+class Finding(Base):
+    """One vulnerability, in one package, in one application."""
+
+    __tablename__ = "findings"
+    __table_args__ = (
+        # Wiz issues no stable finding id across scans, so this tuple is the
+        # identity. It lets a re-scan update a finding instead of duplicating it.
+        UniqueConstraint(
+            "content_guid",
+            "package_name",
+            "package_version",
+            "vulnerability_id",
+            name="uq_findings_identity",
+        ),
+        Index("ix_findings_severity", "severity"),
+        Index("ix_findings_vulnerability", "vulnerability_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    content_guid: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("applications.content_guid", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    package_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    package_version: Mapped[str] = mapped_column(
+        String(128), nullable=False, server_default=""
+    )
+    package_type: Mapped[Optional[str]] = mapped_column(String(32))
+
+    vulnerability_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    severity: Mapped[Optional[str]] = mapped_column(String(16))
+    fixed_version: Mapped[Optional[str]] = mapped_column(String(128))
+    summary: Mapped[Optional[str]] = mapped_column(String(1024))
+    source: Mapped[str] = mapped_column(String(32), nullable=False, server_default="wiz")
+
+    # first_seen never moves; last_seen advances on every scan that still
+    # reports it, which is how a fixed finding becomes visible as stale.
+    first_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    def __repr__(self) -> str:
+        return "<Finding " + self.vulnerability_id + " " + self.package_name + ">"
+
+
+class Notification(Base):
+    """A record that one owner was told about one finding.
+
+    Written before the send, so a crash mid-send risks a missed alert rather
+    than mailing the same person twice.
+    """
+
+    __tablename__ = "notifications"
+    __table_args__ = (
+        UniqueConstraint(
+            "owner_email",
+            "content_guid",
+            "package_name",
+            "package_version",
+            "vulnerability_id",
+            name="uq_notifications_identity",
+        ),
+        Index("ix_notifications_sent_at", "sent_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    owner_email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
+    content_guid: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    package_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    package_version: Mapped[str] = mapped_column(
+        String(128), nullable=False, server_default=""
+    )
+    vulnerability_id: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    # "dry_run" rows record what would have been sent without claiming the
+    # owner was told, so switching to live sending still notifies them.
+    status: Mapped[str] = mapped_column(String(16), nullable=False, server_default="sent")
+    sent_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    def __repr__(self) -> str:
+        return "<Notification " + self.owner_email + " " + self.vulnerability_id + ">"
+
+
 class Package(Base):
     __tablename__ = "packages"
     __table_args__ = (

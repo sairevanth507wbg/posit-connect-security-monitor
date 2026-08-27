@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import logging
+import re
+import uuid
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterator, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
+from urllib.parse import quote
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from database.connection import Database
 from database.models import Application, Package
@@ -46,6 +51,40 @@ APPLICATION_COLUMNS: Tuple[str, ...] = (
     "package_count",
     "inventory_scanned_at",
 )
+
+
+# Wiz parses these purl ecosystems; anything else is inventoried without a
+# purl, which lists it in the SBOM but leaves it unmatched by the scanner.
+PURL_ECOSYSTEMS: Dict[str, str] = {
+    "Python": "pypi",
+    "R": "cran",
+}
+
+CYCLONEDX_SPEC_VERSION = "1.6"
+TOOL_NAME = "posit-connect-security-monitor"
+
+
+def _purl(name: str, version: str, package_type: str) -> Optional[str]:
+    """Build a package URL, or None for an ecosystem no scanner can resolve."""
+    ecosystem = PURL_ECOSYSTEMS.get(package_type)
+    if not ecosystem or not name:
+        return None
+
+    # The purl spec lowercases PyPI names and maps underscore to hyphen.
+    # CRAN names are case-sensitive and must be left alone.
+    if ecosystem == "pypi":
+        name = name.lower().replace("_", "-")
+
+    purl = "pkg:" + ecosystem + "/" + quote(name, safe="")
+    if version:
+        purl += "@" + quote(version, safe="")
+    return purl
+
+
+def _slug(value: str, fallback: str) -> str:
+    """Filename-safe form of an application name."""
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "-", (value or "").strip()).strip("-.")
+    return (cleaned or fallback or "app")[:80]
 
 
 def _iso(value: Optional[datetime]) -> str:
@@ -144,6 +183,117 @@ class ExportService:
                 count += 1
 
         logger.info("Wrote inventory CSV", extra={"path": str(path), "rows": count})
+        return count
+
+    # ---- CycloneDX SBOM -------------------------------------------------
+
+    def _cyclonedx_document(self, app: Any, packages: Sequence[Any]) -> Dict[str, Any]:
+        """Build one CycloneDX 1.6 document for a single application."""
+        components: List[Dict[str, Any]] = []
+        seen = set()
+        for package in packages:
+            purl = _purl(
+                package.package_name, package.package_version, package.package_type
+            )
+            ref = purl or (
+                package.package_name
+                + "@"
+                + (package.package_version or "unknown")
+                + "?type="
+                + package.package_type
+            )
+            if ref in seen:
+                continue
+            seen.add(ref)
+
+            component: Dict[str, Any] = {
+                "type": "library",
+                "bom-ref": ref,
+                "name": package.package_name,
+                "version": package.package_version or "unknown",
+            }
+            if purl:
+                component["purl"] = purl
+            else:
+                # Quarto and Unknown have no purl ecosystem. Listing them keeps
+                # the SBOM a complete inventory even though Wiz cannot match
+                # them against advisories.
+                component["properties"] = [
+                    {"name": "connect:package_type", "value": package.package_type}
+                ]
+            components.append(component)
+
+        # content_guid is the join key: findings come back per SBOM, and this
+        # is what maps them to the application and therefore to its owner.
+        # Owner email is deliberately omitted so no PII leaves the system.
+        properties = [{"name": "connect:content_guid", "value": app.content_guid}]
+        if app.owner:
+            properties.append({"name": "connect:owner", "value": app.owner})
+        if app.content_url:
+            properties.append({"name": "connect:content_url", "value": app.content_url})
+
+        return {
+            "bomFormat": "CycloneDX",
+            "specVersion": CYCLONEDX_SPEC_VERSION,
+            "serialNumber": "urn:uuid:" + str(uuid.uuid4()),
+            "version": 1,
+            "metadata": {
+                "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "tools": {"components": [{"type": "application", "name": TOOL_NAME}]},
+                "component": {
+                    "type": "application",
+                    "bom-ref": app.content_guid,
+                    "name": app.app_name,
+                    "version": app.bundle_id or "unknown",
+                    "properties": properties,
+                },
+            },
+            "components": components,
+        }
+
+    def cyclonedx_documents(self) -> Iterator[Tuple[str, Dict[str, Any]]]:
+        """Yield (filename, document) for every application, one SBOM each."""
+        stmt = (
+            select(Application)
+            .options(selectinload(Application.packages))
+            .order_by(Application.app_name.asc())
+        )
+        with self._database.session() as session:
+            for app in session.execute(stmt).scalars().all():
+                # Names collide across owners, so the guid prefix keeps the
+                # filename unique per application as OIS asked.
+                filename = (
+                    _slug(app.app_name, app.content_guid)
+                    + "-"
+                    + app.content_guid[:8]
+                    + "-cyclonedx.json"
+                )
+                yield filename, self._cyclonedx_document(app, app.packages)
+
+    def to_sbom_zip_bytes(self) -> Tuple[bytes, int]:
+        """Zip one CycloneDX document per application. Returns (bytes, count)."""
+        buffer = io.BytesIO()
+        count = 0
+        with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for filename, document in self.cyclonedx_documents():
+                archive.writestr(
+                    filename, json.dumps(document, indent=2, ensure_ascii=False)
+                )
+                count += 1
+        return buffer.getvalue(), count
+
+    def to_sbom_zip(self, path: Path) -> int:
+        """Write per-application SBOMs to a zip. Returns the document count."""
+        path = Path(path)
+        if path.parent and not path.parent.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+        data, count = self.to_sbom_zip_bytes()
+        path.write_bytes(data)
+        logger.info(
+            "Wrote CycloneDX SBOM bundle",
+            extra={"path": str(path), "documents": count, "bytes": len(data)},
+        )
         return count
 
     @staticmethod

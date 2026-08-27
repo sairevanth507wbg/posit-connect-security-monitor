@@ -69,6 +69,22 @@ RETRYABLE_ERRORS: Tuple[Type[ConnectAPIError], ...] = (
 )
 
 
+class WizError(InventoryError):
+    pass
+
+
+class WizNotConfiguredError(WizError):
+    """Wiz credentials are absent. The scan is skipped, not failed."""
+
+
+class WizAuthError(WizError):
+    pass
+
+
+class WizAPIError(WizError):
+    pass
+
+
 class DatabaseError(InventoryError):
     pass
 

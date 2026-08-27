@@ -6,6 +6,7 @@
     python main.py --db-stats       show what is stored, no network calls
     python main.py --export-csv inventory.csv   write the inventory as CSV
     python main.py --export-zip inventory.zip   write the same CSV, zipped
+    python main.py --export-sbom sboms.zip      per-app CycloneDX SBOMs for Wiz
 
 Exit codes: 0 ok, 1 completed with failures, 2 fatal.
 """
@@ -18,7 +19,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Sequence
-from urllib.parse import urlparse
 
 from clients.connect_client import ConnectClient
 from config.logging_config import configure_logging
@@ -190,6 +190,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="write the inventory to a CSV file and exit")
     parser.add_argument("--export-zip", dest="export_zip", default=None, metavar="PATH",
                         help="write the inventory as a zipped CSV and exit")
+    parser.add_argument("--export-sbom", dest="export_sbom", default=None, metavar="PATH",
+                        help="write one CycloneDX SBOM per application to a zip and exit")
     parser.add_argument("--export-applications", action="store_true",
                         dest="export_applications",
                         help="with --export-csv/--export-zip, one row per application")
@@ -268,6 +270,15 @@ def run(argv: Optional[Sequence[str]] = None) -> int:
                 arcname=export.suggested_filename(),
             )
             print("Wrote " + str(rows) + " row(s) to " + args.export_zip, file=sys.stderr)
+            return EXIT_SUCCESS
+
+        if args.export_sbom:
+            database.verify_schema()
+            count = ExportService(database).to_sbom_zip(Path(args.export_sbom))
+            print(
+                "Wrote " + str(count) + " SBOM(s) to " + args.export_sbom,
+                file=sys.stderr,
+            )
             return EXIT_SUCCESS
 
         if args.db_stats:
